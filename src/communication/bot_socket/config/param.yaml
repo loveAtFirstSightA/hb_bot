@@ -1,0 +1,4 @@
+bot_socket:
+  ros__parameters:
+    port: 5656
+

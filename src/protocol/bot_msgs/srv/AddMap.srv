@@ -1,0 +1,11 @@
+uint64 map_id                           # 请求添加的地图id
+string map_name                         # 请求添加的地图名字
+string building                         # 请求添加的地图所属楼栋
+string floor                            # 请求添加的地图楼层
+string building_id                       # 请求添加的地图所属楼栋
+string floor_id                          # 请求添加的地图楼层
+string area                             # 请求添加的地图区域
+---
+uint8 state                             # 执行反馈（只要是非0，都是失败）
+uint8 SUCCEED                     = 0   # 添加成功
+uint8 FAILED                      = 1   # 添加失败

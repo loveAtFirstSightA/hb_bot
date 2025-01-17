@@ -1,0 +1,5 @@
+ros2 launch bot_description bot_state_publisher.launch.py
+
+ros2 launch bot_lidar bot_lidar.launch.py
+
+

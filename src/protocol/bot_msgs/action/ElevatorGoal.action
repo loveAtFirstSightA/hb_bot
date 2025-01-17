@@ -1,0 +1,30 @@
+#goal definition
+geometry_msgs/PoseStamped enter_elevator_goal 
+geometry_msgs/PoseStamped leave_elevator_goal 
+geometry_msgs/PoseStamped elevator_wait
+geometry_msgs/PoseStamped elevator_middle 
+geometry_msgs/PoseStamped elevator_inside
+
+string behavior_tree
+bool   target_floor_normal_dir_open
+uint8  ENTER   = 1   # 机器人执行进入电梯
+uint8  LEAVE   = 2   # 机器人执行退到乘梯点
+uint8  goal_type     # 执行进出电梯goal的状态
+---
+#result definition
+std_msgs/Empty result
+---
+#feedback definition
+geometry_msgs/PoseStamped current_pose
+builtin_interfaces/Duration navigation_time
+builtin_interfaces/Duration estimated_time_remaining
+int16 number_of_recoveries 
+float32 distance_remaining
+uint8  RUNNING      = 1   # 执行进出电梯 过程中 | 主控不做处理
+uint8  SUCCESS      = 2   # 执行进出电梯 成功 | 主控执行下一流程
+uint8  BLOCKING     = 3   # 执行进出电梯 受阻, 回退到初始点位过程完成 | 主控重新执行进\出电梯
+uint8  EXCEPTION    = 4   # 执行进出电梯 异常 | 主控自行处理
+uint8  RETRIVE      = 5   # 执行进出电梯 受阻, 回退到初始点位过程中 | 主控不做处理
+uint8  ROTATION_IN  = 6   # 正常执行到达点位完成 在旋转中 | 主控释放电梯并呼叫目标楼层
+uint8  ROTATION_OUT = 7   # 异常恢复到达点位完成 在旋转中 | 主控释放电梯，等到接受BLOCKING时 呼叫目标楼层
+uint8  goal_status        # 执行进出电梯goal的状态

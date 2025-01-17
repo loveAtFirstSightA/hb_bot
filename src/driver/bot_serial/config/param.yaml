@@ -1,0 +1,8 @@
+bot_serial_controller:
+  ros__parameters:
+    chassis_port: "/dev/ttyUSB0"
+    chassis_baud_rate: 115200
+    chassis_enabled: true
+    action_unit_port: "/dev/ttyUSB1"
+    action_unit_baud_rate: 115200
+    action_unit_enabled: false
