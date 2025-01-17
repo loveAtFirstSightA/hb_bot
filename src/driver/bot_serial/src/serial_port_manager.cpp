@@ -29,7 +29,8 @@ void SerialPortManager::start(std::shared_ptr<DeviceUnit> device)
         if (serial_port_.isOpen())
         {
             spdlog::info("Serial port {} opened at baud rate {}", port_, baud_rate_);
-            thread_ = std::thread(&SerialPortManager::read_thread, this);
+            read_thread_ = std::thread(&SerialPortManager::read_thread, this);
+            write_thread_ = std::thread(&SerialPortManager::write_thread, this);
         }
         else
         {
@@ -45,9 +46,13 @@ void SerialPortManager::start(std::shared_ptr<DeviceUnit> device)
 void SerialPortManager::stop()
 {
     running_ = false;
-    if (thread_.joinable())
+    if (read_thread_.joinable())
     {
-        thread_.join();
+        read_thread_.join();
+    }
+    if (write_thread_.joinable())
+    {
+        write_thread_.join();
     }
     if (serial_port_.isOpen())
     {
@@ -77,6 +82,50 @@ void SerialPortManager::read_thread()
             spdlog::error("Error reading from serial port {}: {}", port_, e.what());
         }
     }
+}
+
+void SerialPortManager::write_thread()
+{
+    while (running_)
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        write_cond_.wait(lock, [this]() { return !write_queue_.empty() || !running_; });
+
+        if (!write_queue_.empty())
+        {
+            std::vector<uint8_t> data = write_queue_.front();
+            write_queue_.pop();
+            lock.unlock();  // Release the lock while writing
+
+            try
+            {
+                if (serial_port_.isOpen())
+                {
+                    serial_port_.write(data.data(), data.size());
+                    spdlog::info("Data written to serial port: {} bytes", data.size());
+                }
+                else
+                {
+                    spdlog::error("Serial port {} is not open", port_);
+                }
+            }
+            catch (const std::exception &e)
+            {
+                spdlog::error("Error writing to serial port {}: {}", port_, e.what());
+            }
+        }
+    }
+}
+
+// 使用示例
+// std::vector<uint8_t> data = {0x01, 0x02, 0x03, 0x04};
+// serial_port_manager.write_data(data);
+
+void SerialPortManager::write_data(const std::vector<uint8_t> &data)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    write_queue_.push(data);
+    write_cond_.notify_one();  // Notify the write thread that data is available
 }
 
 }  // namespace bot_serial

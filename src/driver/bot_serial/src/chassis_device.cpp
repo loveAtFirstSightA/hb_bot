@@ -126,8 +126,8 @@ void ChassisDevice::parse_frame(const std::string &frame)
     uint16_t received_crc = (static_cast<uint8_t>(frame[4 + data_length]) << 8) |
                             static_cast<uint8_t>(frame[5 + data_length]);
 
-    // 计算 CRC
-    std::vector<uint8_t> frame_for_crc(frame.begin() + 2, frame.begin() + 4 + data_length); // 从帧类型开始，不包含 CRC 本身
+    // 计算 CRC 数据类型和数据长度和数据
+    std::vector<uint8_t> frame_for_crc(frame.begin() + 2, frame.begin() + 4 + data_length); // 从帧类型开始，不包含 CRC 本身 
     uint16_t calculated_crc = calculate_crc16(frame_for_crc);
 
     // 验证 CRC 是否匹配
@@ -208,7 +208,28 @@ void ChassisDevice::process_frame_data(uint8_t frame_type, const std::vector<uin
                 spdlog::warn("Invalid data length for Motor status.");
             }
             break;
+
+        case 0x21:  // encoder data
+            {
+                spdlog::info("encoder, data efficient {}", data[0]);
+                this->left_motor_speed_ = data[1];
+                this->right_motor_speed_ = data[2];
+                this->left_motor_encoder_ = data[3];
+                this->right_motor_encoder_ = data[4];
+            }
+            break;
         
+        case 0x22:  // battery
+            {
+                spdlog::info("battery status");
+            }
+            break;
+        
+        case 0x23:  // imu data
+            {
+
+            }
+            break;
 
         case 0xB1: // 示例帧类型
             spdlog::info("Frame Type 0xB1 received. Data: {}", fmt::join(data, " "));

@@ -40,6 +40,7 @@ BotSerialController::BotSerialController() : Node("bot_serial_controller")
     odom_timer_ = this->create_wall_timer(
         std::chrono::milliseconds(20), // 50ms interval for Odometry data
         std::bind(&BotSerialController::publish_odom_data, this));
+
 }
 
 BotSerialController::~BotSerialController()
@@ -112,6 +113,20 @@ void BotSerialController::publish_odom_data()
     // Publish Odometry data
     odom_publisher_->publish(odom_msg);
     // spdlog::info("Published Odometry data.");
+}
+
+void BotSerialController::control_motor_status(bool status)
+{
+    if (!status) 
+    {
+        std::vector<uint8_t> data = {0xaa, 0x55, 0x01, 0x01, 0x00, 0x90, 0x21};
+        chassis_manager_->write_data(data);
+    }
+    else
+    {
+        std::vector<uint8_t> data = {0xaa, 0x55, 0x01, 0x01, 0x01, 0x50, 0xE0};
+        chassis_manager_->write_data(data);
+    }
 }
 
 }  // namespace bot_serial

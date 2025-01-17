@@ -49,7 +49,10 @@ private:
 
     void publish_imu_data();
     void publish_odom_data();
-    
+
+    void control_motor_status(bool status);
+
+
 };
 }  // namespace bot_serial
 

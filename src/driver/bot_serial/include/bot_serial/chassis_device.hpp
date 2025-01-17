@@ -26,6 +26,10 @@ private:
     void process_frame_data(uint8_t frame_type, const std::vector<uint8_t> &data);
 
     bool motor_status_{false};
+    int16_t left_motor_speed_;
+    int16_t right_motor_speed_;
+    int32_t left_motor_encoder_;
+    int32_t right_motor_encoder_;
 
 
 };
