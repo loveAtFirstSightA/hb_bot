@@ -1,10 +1,4 @@
 #include "bot_serial/chassis_device.hpp"
-#include <spdlog/spdlog.h>
-#include <iomanip>
-#include <sstream>
-#include <vector>
-#include <string>
-#include <cstdint>
 
 namespace bot_serial 
 {
@@ -140,63 +134,46 @@ void ChassisDevice::parse_frame(const std::string &frame)
     // spdlog::info("CRC check passed. Frame Type: 0x{:02X}, Data Length: {}", frame_type, data_length);
 
     // 根据帧类型处理数据
-    process_frame_data(frame_type, data);
-}
-
-// 计算 CRC16 校验码
-uint16_t ChassisDevice::calculate_crc16(const std::vector<uint8_t> &data) 
-{
-    uint16_t crc = 0xFFFF;
-
-    for (uint8_t byte : data) 
-    {
-        crc ^= byte;
-        for (int i = 0; i < 8; ++i) 
-        {
-            if (crc & 0x0001) 
-            {
-                crc >>= 1;
-                crc ^= 0xA001;
-            } 
-            else 
-            {
-                crc >>= 1;
-            }
-        }
-    }
-
-    return crc;
+    process_frame_data(frame_type, data_length, data);
 }
 
 // 根据帧类型处理帧数据
-void ChassisDevice::process_frame_data(uint8_t frame_type, const std::vector<uint8_t> &data)
+void ChassisDevice::process_frame_data(const uint8_t frame_type, const uint8_t data_length, const std::vector<uint8_t> &data)
 {
     switch (frame_type) 
     {
-        case 0xA0: // 心跳帧
-            if (data.size() == 1) 
+        // 心跳帧
+        case 0xA0:
+        {
+            if (data.size() == data_length) 
             {
                 uint8_t heartbeat_status = data[0];
-                spdlog::info("Heartbeat frame received, status: 0x{:02X}", heartbeat_status);
-            } 
+                // spdlog::info("Heartbeat frame received, status: 0x{:02X}", heartbeat_status);
+                if (heartbeat_status == 0 || heartbeat_status == 1)
+                {
+                    // 记录心跳发生的时间戳
+                    this->last_heartbeat_timestamp_ = std::chrono::high_resolution_clock::now();
+                }
+            }
             else 
             {
-                spdlog::warn("Invalid data length for Heartbeat frame.");
+                spdlog::warn("Invalid data length for Heartbeat frame");
             }
-            break;
-        
-        case 0x01: // 电机状态
-            if (data.size() == 1)
+        } break;
+        // 电机状态
+        case 0x01:
+        {
+            if (data.size() == data_length)
             {
                 if (data[0] == 0)
                 {
                     this->motor_status_ = false;
-                    spdlog::info("Motor status is disable");
+                    // spdlog::info("Motor status is disable");
                 }
                 else if (data[0] == 1)
                 {
                     this->motor_status_ = true;
-                    spdlog::info("Motor status is enable");
+                    // spdlog::info("Motor status is enable");
                 }
                 else
                 {
@@ -205,31 +182,35 @@ void ChassisDevice::process_frame_data(uint8_t frame_type, const std::vector<uin
             }
             else
             {
-                spdlog::warn("Invalid data length for Motor status.");
+                spdlog::warn("Invalid data length for Motor status frame");
             }
-            break;
-
-        case 0x21:  // encoder data
+        } break;
+        // 电机轮速编码器数据
+        case 0x21:
+        {
+            if (data.size() == data_length)
             {
-                spdlog::info("encoder, data efficient {}", data[0]);
+                // spdlog::info("encoder, data efficient {}", data[0]);
                 this->left_motor_speed_ = data[1];
                 this->right_motor_speed_ = data[2];
                 this->left_motor_encoder_ = data[3];
                 this->right_motor_encoder_ = data[4];
             }
-            break;
+            else
+            {
+                spdlog::warn("Invalid data length for Motor value speed and encoder frame");
+            }
+        } break;
         
         case 0x22:  // battery
-            {
-                spdlog::info("battery status");
-            }
-            break;
+        {
+            spdlog::info("battery status");
+        } break;
         
         case 0x23:  // imu data
-            {
+        {
 
-            }
-            break;
+        } break;
 
         case 0xB1: // 示例帧类型
             spdlog::info("Frame Type 0xB1 received. Data: {}", fmt::join(data, " "));
@@ -241,22 +222,38 @@ void ChassisDevice::process_frame_data(uint8_t frame_type, const std::vector<uin
     }
 }
 
+std::chrono::high_resolution_clock::time_point ChassisDevice::get_last_heartbeat_stamp()
+{
+    return this->last_heartbeat_timestamp_;
+}
+
 bool ChassisDevice::get_motor_status()
 {
     return this->motor_status_;
 }
 
-
-// 启用设备
-void ChassisDevice::enable_device()
+int16_t ChassisDevice::get_left_motor_speed()
 {
-    spdlog::info("ChassisDevice enabled.");
+    return this->left_motor_speed_;
 }
 
-// 禁用设备
-void ChassisDevice::disable_device()
+int16_t ChassisDevice::get_right_motor_speed()
 {
-    spdlog::info("ChassisDevice disabled.");
+    return this->right_motor_speed_;
 }
+
+int32_t ChassisDevice::get_left_motor_encoder()
+{
+    return left_motor_encoder_;
+}
+
+int32_t ChassisDevice::get_right_motor_encoder()
+{
+    return this->right_motor_encoder_;
+}
+
+
+
+
 
 } // namespace bot_serial

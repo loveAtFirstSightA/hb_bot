@@ -12,8 +12,8 @@ public:
     virtual ~DeviceUnit() = default;
 
     virtual void process_data(const std::string &data) = 0;
-    virtual void enable_device() = 0;
-    virtual void disable_device() = 0;
+    // virtual void enable_device() = 0;
+    // virtual void disable_device() = 0;
 };
 }  // namespace bot_serial
 

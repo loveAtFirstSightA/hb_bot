@@ -9,8 +9,8 @@ class ActionUnitDevice : public DeviceUnit
 {
 public:
     void process_data(const std::string &data) override;
-    void enable_device() override;
-    void disable_device() override;
+    // void enable_device() override;
+    // void disable_device() override;
 };
 }  // namespace bot_serial
 

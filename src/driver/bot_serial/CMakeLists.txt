@@ -20,6 +20,8 @@ find_package(rclcpp REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 # 包含头文件目录
 include_directories(include)
@@ -34,6 +36,8 @@ set(dependencies
   spdlog
   sensor_msgs
   nav_msgs
+  tf2
+  tf2_ros
 )
 
 add_executable(${executable_name} src/main.cpp)
@@ -49,6 +53,7 @@ add_library(${library_name}
   src/serial_port_manager.cpp
   src/chassis_device.cpp
   src/action_unit_device.cpp
+  src/common.cpp
 )
 target_include_directories(${library_name} PRIVATE include)
 ament_target_dependencies(${library_name} ${dependencies})

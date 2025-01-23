@@ -1,8 +1,13 @@
 bot_serial_controller:
   ros__parameters:
-    chassis_port: "/dev/ttyUSB0"
+    # chassis_port: "/dev/ttyUSB0"
+    chassis_port: "/dev/ttyS0"
     chassis_baud_rate: 115200
     chassis_enabled: true
-    action_unit_port: "/dev/ttyUSB1"
+    # action_unit_port: "/dev/ttyUSB1"
+    action_unit_port: "/dev/ttyS5"
     action_unit_baud_rate: 115200
-    action_unit_enabled: false
+    action_unit_enabled: true
+    wheel_diameter: 0.17
+    encoder_pulse: 16384
+    wheel_base: 0.4885
