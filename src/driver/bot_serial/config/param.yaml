@@ -4,8 +4,8 @@ bot_serial_controller:
     chassis_port: "/dev/ttyS0"
     chassis_baud_rate: 115200
     chassis_enabled: true
-    # action_unit_port: "/dev/ttyUSB1"
-    action_unit_port: "/dev/ttyS5"
+    action_unit_port: "/dev/ttyACM0"
+    # action_unit_port: "/dev/ttyS5"
     action_unit_baud_rate: 115200
     action_unit_enabled: true
     wheel_diameter: 0.17

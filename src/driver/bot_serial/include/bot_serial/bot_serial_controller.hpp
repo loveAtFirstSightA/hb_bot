@@ -11,6 +11,7 @@
 #include "nav_msgs/msg/odometry.hpp"    // 里程计消息类型
 #include "tf2/utils.hpp"
 #include "bot_serial/common.hpp"
+#include "std_msgs/msg/string.hpp"
 
 namespace bot_serial
 {
@@ -23,6 +24,7 @@ public:
 private:
     void setup_devices();
     void vel_subscriber_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
+    void control_cell_subscriber_callback(const std_msgs::msg::String::SharedPtr msg);
 
     std::shared_ptr<SerialPortManager> chassis_manager_;
     std::shared_ptr<SerialPortManager> action_unit_manager_;
@@ -51,6 +53,7 @@ private:
 
     // 订阅者
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr vel_subscriber_;
+    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr control_cell_subscriber_;
 
     // 定时器
     rclcpp::TimerBase::SharedPtr imu_timer_;
@@ -106,16 +109,6 @@ private:
     void open_cell_four();
     void close_cell_four();
 
-    // TODO
-    rclcpp::TimerBase::SharedPtr timer_info_;
-    void timer_info_callback()
-    {
-        static bool flag;
-        if (flag) {
-        } else {
-        }
-        flag = !flag;
-    }
 
 
 

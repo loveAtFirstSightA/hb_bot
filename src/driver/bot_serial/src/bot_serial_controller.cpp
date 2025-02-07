@@ -46,7 +46,7 @@ BotSerialController::BotSerialController() : Node("bot_serial_controller"),
 
     // 处理速度指令
     vel_subscriber_ = this->create_subscription<geometry_msgs::msg::Twist>(
-        "cmd_vel", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable(),
+        "cmd_vel", rclcpp::QoS(rclcpp::KeepLast(10)),
         std::bind(&BotSerialController::vel_subscriber_callback, this, std::placeholders::_1));
 
     // Create timers for publishing data
@@ -61,10 +61,9 @@ BotSerialController::BotSerialController() : Node("bot_serial_controller"),
     chassis_ = std::dynamic_pointer_cast<ChassisDevice>(chassis_device_);
     action_ = std::dynamic_pointer_cast<ActionUnitDevice>(action_unit_device_);
 
-    // TODO
-    timer_info_ = this->create_wall_timer(
-        std::chrono::seconds(5),
-        std::bind(&BotSerialController::timer_info_callback, this));
+    control_cell_subscriber_ = this->create_subscription<std_msgs::msg::String>(
+        "control_cell", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable(),
+        std::bind(&BotSerialController::control_cell_subscriber_callback, this, std::placeholders::_1));
 
 }
 
@@ -101,6 +100,7 @@ void BotSerialController::vel_subscriber_callback(const geometry_msgs::msg::Twis
     double v, w;
     v = msg->linear.x;
     w = msg->angular.z;
+    spdlog::info("received msg vel: [v {:.4f}, w {:.4f}]", v, w);
     control_motor_speed(v, w);
 }
 
@@ -277,7 +277,7 @@ void BotSerialController::enable_motor()
     // 打印整个 frame 中的数据
     std::ostringstream oss;
     for (auto byte : frame) {
-        oss << "0x" << std::hex << std::uppercase << (int)byte << " ";
+        oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)byte << " ";
     }
     // 使用 spdlog 打印
     spdlog::info("enable motor, frame: {}", oss.str());
@@ -316,7 +316,7 @@ void BotSerialController::disable_motor()
     // 打印整个 frame 中的数据
     std::ostringstream oss;
     for (auto byte : frame) {
-        oss << "0x" << std::hex << std::uppercase << (int)byte << " ";
+        oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)byte << " ";
     }
     // 使用 spdlog 打印
     spdlog::info("disable motor, frame: {}", oss.str());
@@ -356,7 +356,7 @@ void BotSerialController::control_led_info_red()
     // 打印整个 frame 中的数据
     std::ostringstream oss;
     for (auto byte : frame) {
-        oss << "0x" << std::hex << std::uppercase << (int)byte << " ";
+        oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)byte << " ";
     }
     // 使用 spdlog 打印
     spdlog::info("control led info red, frame: {}", oss.str());
@@ -396,7 +396,7 @@ void BotSerialController::control_led_info_green()
     // 打印整个 frame 中的数据
     std::ostringstream oss;
     for (auto byte : frame) {
-        oss << "0x" << std::hex << std::uppercase << (int)byte << " ";
+        oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)byte << " ";
     }
     // 使用 spdlog 打印
     spdlog::info("control led info green, frame: {}", oss.str());
@@ -435,7 +435,7 @@ void BotSerialController::enable_emergency_switch()
     // 打印整个 frame 中的数据
     std::ostringstream oss;
     for (auto byte : frame) {
-        oss << "0x" << std::hex << std::uppercase << (int)byte << " ";
+        oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)byte << " ";
     }
     // 使用 spdlog 打印
     spdlog::info("enable emergency switch, frame: {}", oss.str());
@@ -474,7 +474,7 @@ void BotSerialController::disable_emergency_switch()
     // 打印整个 frame 中的数据
     std::ostringstream oss;
     for (auto byte : frame) {
-        oss << "0x" << std::hex << std::uppercase << (int)byte << " ";
+        oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)byte << " ";
     }
     // 使用 spdlog 打印
     spdlog::info("disable emergency switch, frame: {}", oss.str());
@@ -513,7 +513,7 @@ void BotSerialController::clear_motor_encoder_value()
     // 打印整个 frame 中的数据
     std::ostringstream oss;
     for (auto byte : frame) {
-        oss << "0x" << std::hex << std::uppercase << (int)byte << " ";
+        oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)byte << " ";
     }
     // 使用 spdlog 打印
     spdlog::info("clear motor encoder value, frame: {}", oss.str());
@@ -552,7 +552,7 @@ void BotSerialController::start_recharge()
     // 打印整个 frame 中的数据
     std::ostringstream oss;
     for (auto byte : frame) {
-        oss << "0x" << std::hex << std::uppercase << (int)byte << " ";
+        oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)byte << " ";
     }
     // 使用 spdlog 打印
     spdlog::info("start recharge, frame: {}", oss.str());
@@ -591,7 +591,7 @@ void BotSerialController::close_recharge()
     // 打印整个 frame 中的数据
     std::ostringstream oss;
     for (auto byte : frame) {
-        oss << "0x" << std::hex << std::uppercase << (int)byte << " ";
+        oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)byte << " ";
     }
     // 使用 spdlog 打印
     spdlog::info("close recharge, frame: {}", oss.str());
@@ -630,7 +630,7 @@ void BotSerialController::turn_off_calculate_power()
     // 打印整个 frame 中的数据
     std::ostringstream oss;
     for (auto byte : frame) {
-        oss << "0x" << std::hex << std::uppercase << (int)byte << " ";
+        oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)byte << " ";
     }
     // 使用 spdlog 打印
     spdlog::info("turn off calculate power, frame: {}", oss.str());
@@ -650,7 +650,7 @@ void BotSerialController::control_motor_speed(const double v, const double w)
     double left_speed_rad_per_sec = (v - (w * wheel_base / 2.0)) / wheel_radius;
     double right_speed_rad_per_sec = (v + (w * wheel_base / 2.0)) / wheel_radius;
 
-    // 将 rad/s 转换为 r/min
+    /// 将 rad/s 转换为 r/min
     double left_speed_rpm = (left_speed_rad_per_sec * 60.0) / (2.0 * M_PI);
     double right_speed_rpm = (right_speed_rad_per_sec * 60.0) / (2.0 * M_PI);
 
@@ -663,16 +663,25 @@ void BotSerialController::control_motor_speed(const double v, const double w)
     uint8_t heading1 = 0xaa;
     uint8_t heading2 = 0x55;
     uint8_t type = 0x02;
-    uint8_t data_length = 0x05;
+    uint8_t data_length = 0x05;  // 数据长度是5，表示包含3个数据字节
 
-    // D1-D2:  左轮电机转速，单位：r/min 
-    // D3-D4:  右轮电机转速，单位：r/min 
-    // int16_t left_motor_spd; 
-    // int16_t right_mode_spd; 
-    uint8_t data = 0x03;
+    // D0: 3 速度模式
+    // D1-D2: 左轮电机转速，单位：r/min (int16_t)
+    // D3-D4: 右轮电机转速，单位：r/min (int16_t)
+
+    // 转换左右轮速度为 int16_t（16位的有符号整数）
+    short left_motor_spd = static_cast<short>(left_speed_rpm);  // 将转速转换为 16 位整数
+    short right_motor_spd = static_cast<short>(right_speed_rpm);  // 将转速转换为 16 位整数
+
+    // 拆分为字节
+    uint8_t data_0 = 0x03;  // 速度模式标识
+    uint8_t data_1 = (left_motor_spd >> 8) & 0xFF;  // 左轮转速高字节
+    uint8_t data_2 = left_motor_spd & 0xFF;         // 左轮转速低字节
+    uint8_t data_3 = (right_motor_spd >> 8) & 0xFF; // 右轮转速高字节
+    uint8_t data_4 = right_motor_spd & 0xFF;        // 右轮转速低字节
 
     // CRC 校验数据部分
-    std::vector<uint8_t> crc_data = {type, data_length, data};
+    std::vector<uint8_t> crc_data = {type, data_length, data_0, data_1, data_2, data_3, data_4};
 
     // 计算 CRC 校验码
     uint16_t crc = calculate_crc16(crc_data);
@@ -682,7 +691,11 @@ void BotSerialController::control_motor_speed(const double v, const double w)
     frame.push_back(heading2);
     frame.push_back(type);
     frame.push_back(data_length);
-    frame.push_back(data);
+    frame.push_back(data_0);
+    frame.push_back(data_1);
+    frame.push_back(data_2);
+    frame.push_back(data_3);
+    frame.push_back(data_4); 
 
     // 在数据末尾添加新的 CRC 校验码，按高字节在前，低字节在后的顺序
     frame.push_back((crc >> 8) & 0xFF); // CRC 高字节
@@ -691,7 +704,7 @@ void BotSerialController::control_motor_speed(const double v, const double w)
     // 打印整个 frame 中的数据
     std::ostringstream oss;
     for (auto byte : frame) {
-        oss << "0x" << std::hex << std::uppercase << (int)byte << " ";
+        oss << "0x" << std::setw(2) << std::setfill('0') << std::hex << std::uppercase << (int)byte << " ";
     }
     // 使用 spdlog 打印
     spdlog::info("control motor speed, frame: {}", oss.str());
@@ -700,6 +713,50 @@ void BotSerialController::control_motor_speed(const double v, const double w)
     chassis_manager_->write_data(frame);
 }
 
+
+void BotSerialController::control_cell_subscriber_callback(const std_msgs::msg::String::SharedPtr msg)
+{
+    spdlog::info("received msg control cell: {}", msg->data.c_str());
+    std::string command = msg->data.c_str();
+    if (command == "open_cell_one")
+    {
+        open_cell_one();
+    }
+    else if (command == "close_cell_one")
+    {
+        close_cell_one();
+    }
+    else if (command == "open_cell_two")
+    {
+        open_cell_two();
+    }
+    else if (command == "close_cell_two")
+    {
+        close_cell_two();
+    }
+    else if (command == "open_cell_three")
+    {
+        open_cell_three();
+    }
+    else if (command == "close_cell_three")
+    {
+        close_cell_three();
+    }
+    else if (command == "open_cell_four")
+    {
+        open_cell_four();
+    }
+    else if (command == "close_cell_four")
+    {
+        close_cell_four();
+    }
+    else
+    {
+        spdlog::error("error command");
+    }
+    
+    
+}
 
 void BotSerialController::open_cell_one()
 {
